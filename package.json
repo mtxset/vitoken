@@ -1,0 +1,25 @@
+{
+  "name": "vitoken",
+  "version": "1.0.0",
+  "description": "Vitoken and Crowdsale (PreICO, ICO, PostICO)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mtxset/vitoken.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Solidity",
+    "Token",
+    "ICO"
+  ],
+  "author": "mtxset",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mtxset/vitoken/issues"
+  },
+  "homepage": "https://github.com/mtxset/vitoken#readme"
+}
