@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/mtxset/vitoken/issues"
   },
-  "homepage": "https://github.com/mtxset/vitoken#readme"
+  "homepage": "https://github.com/mtxset/vitoken#readme",
+  "devDependencies": {
+    "chai": "^4.1.1"
+  }
 }
