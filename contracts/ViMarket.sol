@@ -103,27 +103,16 @@ contract StandardToken is ERC20, BasicToken {
 
 }
 
-contract Vitoken is StandardToken, Ownable
+contract ViMarket is StandardToken, Ownable
 {
+    // Token Infromation
     string public name = "Vitoken";
     string public symbol = "VIT";
 
     uint public decimals = 2;
     bool public allowBuying = true;
 
-    uint private initialSupply = 9.999 * 10**(9+2); // 9.999 Billions
-
-    function Vitoken()
-    {
-        owner = msg.sender;
-        balances[owner] = initialSupply;
-    }
-}
-
-contract Mediterranean is StandardToken, Ownable
-{
-    // Reference to token
-    Vitoken token;
+    uint private initialSupply = 9.999 * 10**(9+2); // 9.999 Billions + 2 decimal places
 
     uint public rate = 340; // 1$ - per token (use ether price in dollars)
     
@@ -166,9 +155,12 @@ contract Mediterranean is StandardToken, Ownable
         BuyTokens(msg.sender);
     }
     
-    function Mediterranean()
+    function ViMarket()
     {
-        token = new Vitoken();
+        owner = msg.sender;
+        balances[owner] = initialSupply;
+        totalSupply = initialSupply;
+        
         Stage = Stages.Setup;
     }
     // -- Fallback function and Constructor

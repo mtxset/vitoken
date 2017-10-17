@@ -1,6 +1,6 @@
 pragma solidity 0.4.15;
 
-import "../../contracts/Vitoken.sol";
+import "../../contracts/ViMarket.sol";
 
 contract SafeMathMock
 {

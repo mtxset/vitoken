@@ -1,7 +1,7 @@
-const Vitoken = artifacts.require("Vitoken")
+const ViMarket = artifacts.require("ViMarket.sol")
+
 import { expectThrow } from "./helpers/index"
 import { expect } from "chai"
-
 
 let vi = null;
 const decimals = 2;
@@ -42,7 +42,7 @@ contract("Vitoken", (accounts)=>
         {
             it("It should initialize", async()=>
             {
-                vi = await Vitoken.new({from: king});
+                vi = await ViMarket.new({from: king});
 
                 expect(await vi.owner(), 
                     "Owners should match")
@@ -52,7 +52,7 @@ contract("Vitoken", (accounts)=>
                     "Total supply should match")
                     .to.equal(viTotalSupply);
 
-                expect((await vi.balanceOf(vi.address)).toNumber(),
+                expect((await vi.balanceOf(king)).toNumber(),
                     "Balance should equal to initial supply")
                     .to.equal(viTotalSupply);
             })
@@ -103,39 +103,6 @@ contract("Vitoken", (accounts)=>
                 .to.equal(king);
 
             expect(await expectThrow(vi.transferOwnership(0, {from:king})),
-                "Should throw")
-                .to.be.true;
-        })
-    })
-
-    describe("Function: ChangeRate(uint newRate)", async()=>
-    {
-        beforeEach(async()=>
-        {
-            vi = await Vitoken.new({from: king});
-        })
-
-        it("Should correctly change rate", async()=>
-        {
-            expect((await vi.rate()).toNumber(),
-                "Rate is incorrect")
-                .to.be.equal(rate);
-
-            let newRate = 150;
-            let r = ReturnEventAndArgs(await vi.ChangeRate(newRate, {from:king}));
-
-            expect(r.eventName, 
-                "Event EventOwnerTransfered was not fired")
-                .to.be.equal("EventRateChanged");
-
-            expect((await vi.rate()).toNumber(),
-                "Rate is incorrect")
-                .to.be.equal(newRate);
-        })
-
-        it("Should not change rate (rate is 0)", async()=>
-        {
-            expect(await expectThrow(vi.ChangeRate(0, {from:king})),
                 "Should throw")
                 .to.be.true;
         })
