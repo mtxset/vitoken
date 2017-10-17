@@ -1,4 +1,4 @@
-pragma solidity 0.4.13;
+pragma solidity 0.4.15;
 
 contract ERC20Basic {
   uint256 public totalSupply;
@@ -106,28 +106,70 @@ contract StandardToken is ERC20, BasicToken {
 contract Vitoken is StandardToken, Ownable
 {
     string public name = "Vitoken";
-    string public symbol = "ViT";
+    string public symbol = "VIT";
 
     uint public decimals = 2;
-    uint public rate = 322; // 1$ - per token (use ether price in dollars)
-
     bool public allowBuying = true;
 
-    uint private constant initialSupply = 9.999 * 10**9; // 9.999 Billions
-    address private initialSupplyOwner;
+    uint private initialSupply = 9.999 * 10**(9+2); // 9.999 Billions
+
+    function Vitoken()
+    {
+        owner = msg.sender;
+        balances[owner] = initialSupply;
+    }
+}
+
+contract Mediterranean is StandardToken, Ownable
+{
+    // Reference to token
+    Vitoken token;
+
+    uint public rate = 340; // 1$ - per token (use ether price in dollars)
     
+    // All stages of sale
+    enum Stages
+    {
+        Setup,
+        PreICOFirstWeek,
+        PreICOSecondWeek,
+        PreICOThirdWeek,
+        PreICOFourthWeek,
+        ICO,
+        End
+    }
+    Stages public Stage;
+
+    // Dates for ICO sub-stages
+    uint public constant PreICOSubStageStart = 1509926400; // Monday, 06-Nov-17 00:00:00 UTC
+    uint public constant PreICOSubStageEnd = 1512000000; // Thursday, 30-Nov-17 00:00:00 UTC
+
+    uint public constant ICOSubStageStart = 1512086400; // Friday, 01-Dec-17 00:00:00 UTC
+    uint public constant ICOSubStageEnd = 1514678400;  // Sunday, 31-Dec-17 00:00:00 UTC
+
+    // Limits for tokens
+    uint public constant PreICOSubStageTokenLimit = 100 * 10**6; // 100 Millions
+    uint public constant ICOSubStageTokenLimit = 50 * 10**6; // 50 Millions
+
+    // Prices 
+    //  100 % - rate
+    //    x % - rateX
+    uint256 public PreICOFirstWeekRate = 40 * rate / 100; // 0.4 $/token
+    uint256 public PreICOSecondWeekRate = 50 * rate / 100; // 0.5 $/token
+    uint256 public PreICOThirdWeekRate = 60 * rate / 100; // 0.6 $/token
+    uint256 public PreICOFourthWeekRate = 70 * rate / 100; // 0.7 $/token
+    uint256 public ICORate = 75 * rate / 100; // 75 %
+
     // Fallback function and Constructor
     function () payable 
     {
         BuyTokens(msg.sender);
     }
     
-    function Vitoken()
+    function Mediterranean()
     {
-        owner = msg.sender;
-        initialSupplyOwner = this;
-        totalSupply = initialSupply;
-        balances[initialSupplyOwner] = initialSupply;
+        token = new Vitoken();
+        Stage = Stages.Setup;
     }
     // -- Fallback function and Constructor
     
@@ -140,19 +182,11 @@ contract Vitoken is StandardToken, Ownable
         EventOwnerTransfered(oldOwner, newOwner);
     }
 
-    function ChangeRate(uint newRate)
-    onlyOwner
-    {
-        require(newRate > 0);
-        uint oldRate = rate;
-        rate = newRate;
-        EventRateChanged(oldRate, newRate);
-    }
-
     function BuyTokens(address beneficiary) 
-    OnlyIfBuyingAllowed
     payable 
     {
+        require(Stage != Stages.Setup);
+        require(Stage != Stages.End);
         require(beneficiary != 0x0);
         require(beneficiary != owner);
         require(msg.value > 0);
@@ -160,12 +194,66 @@ contract Vitoken is StandardToken, Ownable
         uint weiAmount = msg.value;
         uint etherAmount = WeiToEther(weiAmount);
         
-        uint tokens = etherAmount.mul(rate);
+        uint tokens = etherAmount.mul(GetCurrentRate());
 
         balances[beneficiary] = balances[beneficiary].add(tokens);
-        balances[initialSupplyOwner] = balances[initialSupplyOwner].sub(tokens);
+        balances[owner] = balances[owner].sub(tokens);
 
         EventTokenPurchase(msg.sender, beneficiary, etherAmount, tokens, rate);
+    }
+    // Rate function - returns rate by checking current Stage
+    function GetCurrentRate() public constant
+    returns (uint)
+    {
+        Stages currentStage = GetCurrentStage();
+        if (currentStage == Stages.PreICOFirstWeek)
+            return PreICOFirstWeekRate;
+
+        if (currentStage == Stages.PreICOSecondWeek)
+            return PreICOSecondWeekRate;
+
+        if (currentStage == Stages.PreICOThirdWeek)
+            return PreICOThirdWeekRate;
+
+        if (currentStage == Stages.PreICOFourthWeek)
+            return PreICOFourthWeekRate;
+
+        if (currentStage == Stages.ICO)
+            return ICORate;
+    }
+
+    // Stage functions
+    function GetCurrentStage() public constant
+    returns (Stages)
+    {
+        if (now >= PreICOSubStageStart && now <= PreICOSubStageEnd)
+        {
+            if (now >= PreICOSubStageStart + 1 weeks && now <= PreICOSubStageStart + 2 weeks)
+                return Stages.PreICOFirstWeek;
+            else if (now >= PreICOSubStageStart + 2 weeks && now <= PreICOSubStageStart + 3 weeks)
+                return Stages.PreICOSecondWeek;
+            else if (now >= PreICOSubStageStart + 3 weeks && now <= PreICOSubStageStart + 4 weeks)
+                return Stages.PreICOThirdWeek;
+            else if (now >= PreICOSubStageStart + 4 weeks && now <= PreICOSubStageStart + 5 weeks)
+                return Stages.PreICOFourthWeek;
+        }
+        else if (now >= ICOSubStageStart && now <= ICOSubStageEnd)
+            return Stages.ICO;
+    }
+
+    function ChangeState(Stages stage) public
+    onlyOwner
+    {
+        if (stage == Stages.PreICOFirstWeek && Stage == Stages.Setup)
+            { Stage = stage; return; }
+        else if (stage == Stages.PreICOSecondWeek && Stage == Stages.PreICOFirstWeek)
+            { Stage = stage; return; }
+        else if (stage == Stages.PreICOThirdWeek && Stage == Stages.PreICOSecondWeek)
+            { Stage = stage; return; }
+        else if (stage == Stages.PreICOFourthWeek && Stage == Stages.PreICOThirdWeek)
+            { Stage = stage; return; }
+        else if (stage == Stages.ICO && Stage == Stages.PreICOFourthWeek)
+            { Stage = stage; return; }
     }
 
     function RetrieveFunds()
@@ -186,25 +274,15 @@ contract Vitoken is StandardToken, Ownable
     returns (uint)
     {
         require(v > 0);
-        return v.div(1000000000000000000);
+        return v.div(1 ether);
     }
 
     function EtherToWei(uint v) internal
     returns (uint)
     {
       require(v > 0);
-      return v.mul(1000000000000000000);
+      return v.mul(1 ether);
     }
-    // -- Helper functions
-    
-    function ToggleFreezeBuying()
-    onlyOwner
-    { allowBuying = !allowBuying; }
-
-    // Modifiers
-    modifier OnlyIfBuyingAllowed()
-    { require(allowBuying); _; }
-    // -- Modifiers
 
     // Events
     event EventOwnerTransfered(address oldOwner, address newOwner);

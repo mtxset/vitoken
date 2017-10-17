@@ -4,7 +4,8 @@ import { expect } from "chai"
 
 
 let vi = null;
-const viTotalSupply = 9.999 * 10**9; // 9.999 Billions
+const decimals = 2;
+const viTotalSupply = 9.999 * 10**(9+2); // 9.999 Billions
 const rate = 322;
 
 var king; // will use this as owner
