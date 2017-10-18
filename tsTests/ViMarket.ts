@@ -24,7 +24,7 @@ function ReturnEventAndArgs(returnVal)
 }
 // -- Helper functions
 
-contract("Vitoken", (accounts)=> 
+contract("ViMarket", (accounts)=> 
 {
     before(async()=>
     {
@@ -57,13 +57,26 @@ contract("Vitoken", (accounts)=>
                     .to.equal(viTotalSupply);
             })
         })
+    })  
+    
+    describe("Function: GetCurrentStage()", async()=>
+    {
+        beforeEach(async()=>
+        {
+            vi = await ViMarket.new({from: king});
+        });
+
+        it("Should traverse through all stages", async()=>
+        {
+
+        })
     })
 
     describe("Function: transferOwnership(address newOwner) ", async()=>
     {
         it("Should correctly transfer ownership", async()=>
         {
-            vi = await Vitoken.new({from: king});
+            vi = await ViMarket.new({from: king});
 
             // Checking current owner
             expect(await vi.owner(), 
@@ -83,7 +96,7 @@ contract("Vitoken", (accounts)=>
 
         it("Should not trasnfer ownership (not owner transfers)", async()=>
         {
-            vi = await Vitoken.new({from: king});
+            vi = await ViMarket.new({from: king});
 
             expect(await vi.owner(), 
                 "Owners should match")
@@ -96,7 +109,7 @@ contract("Vitoken", (accounts)=>
 
         it("Should not transfer ownership (passing 0 address)", async()=>
         {
-            vi = await Vitoken.new({from: king});
+            vi = await ViMarket.new({from: king});
 
             expect(await vi.owner(), 
                 "Owners should match")
@@ -112,7 +125,7 @@ contract("Vitoken", (accounts)=>
     {
         beforeEach(async()=>
         {
-            vi = await Vitoken.new({from: king});
+            vi = await ViMarket.new({from: king});
         })
 
         it("Should correctly buy tokens", async()=>

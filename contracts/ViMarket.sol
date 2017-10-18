@@ -114,11 +114,12 @@ contract ViMarket is StandardToken, Ownable
 
     uint private initialSupply = 9.999 * 10**(9+2); // 9.999 Billions + 2 decimal places
 
-    uint public rate = 340; // 1$ - per token (use ether price in dollars)
+    uint public rate = 303; // 1$ - per token (use ether price in dollars)
     
     // All stages of sale
     enum Stages
     {
+        Error,
         Setup,
         PreICOFirstWeek,
         PreICOSecondWeek,
@@ -193,6 +194,28 @@ contract ViMarket is StandardToken, Ownable
 
         EventTokenPurchase(msg.sender, beneficiary, etherAmount, tokens, rate);
     }
+
+    // Stage functions
+    function GetCurrentStage() public constant
+    returns (Stages)
+    {
+        if (now >= PreICOSubStageStart && now <= PreICOSubStageEnd)
+        {
+            if (now >= PreICOSubStageStart + 1 weeks && now <= PreICOSubStageStart + 2 weeks)
+                return Stages.PreICOFirstWeek;
+            else if (now >= PreICOSubStageStart + 2 weeks && now <= PreICOSubStageStart + 3 weeks)
+                return Stages.PreICOSecondWeek;
+            else if (now >= PreICOSubStageStart + 3 weeks && now <= PreICOSubStageStart + 4 weeks)
+                return Stages.PreICOThirdWeek;
+            else if (now >= PreICOSubStageStart + 4 weeks && now <= PreICOSubStageStart + 5 weeks)
+                return Stages.PreICOFourthWeek;
+        }
+        else if (now >= ICOSubStageStart && now <= ICOSubStageEnd)
+            return Stages.ICO;
+
+        return 0;
+    }
+
     // Rate function - returns rate by checking current Stage
     function GetCurrentRate() public constant
     returns (uint)
@@ -212,25 +235,8 @@ contract ViMarket is StandardToken, Ownable
 
         if (currentStage == Stages.ICO)
             return ICORate;
-    }
 
-    // Stage functions
-    function GetCurrentStage() public constant
-    returns (Stages)
-    {
-        if (now >= PreICOSubStageStart && now <= PreICOSubStageEnd)
-        {
-            if (now >= PreICOSubStageStart + 1 weeks && now <= PreICOSubStageStart + 2 weeks)
-                return Stages.PreICOFirstWeek;
-            else if (now >= PreICOSubStageStart + 2 weeks && now <= PreICOSubStageStart + 3 weeks)
-                return Stages.PreICOSecondWeek;
-            else if (now >= PreICOSubStageStart + 3 weeks && now <= PreICOSubStageStart + 4 weeks)
-                return Stages.PreICOThirdWeek;
-            else if (now >= PreICOSubStageStart + 4 weeks && now <= PreICOSubStageStart + 5 weeks)
-                return Stages.PreICOFourthWeek;
-        }
-        else if (now >= ICOSubStageStart && now <= ICOSubStageEnd)
-            return Stages.ICO;
+        return 0;
     }
 
     function ChangeState(Stages stage) public
